@@ -18,10 +18,36 @@
     #gallery { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 1rem; }
     .album-card { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; text-align: center; padding: 0.5rem; cursor: pointer; transition: transform 0.2s, box-shadow 0.2s; }
     .album-card:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.15); }
-    .album-card img { width: 100%; height: auto; display: block; border-bottom: 1px solid #eee; }
+    .album-card img { width: 100%; height: auto; display: block; border-bottom: 1px solid #eee; transition: opacity 0.3s ease; }
     .album-card p { margin: 0.5rem 0 0; font-size: 0.9rem; }
     .value { color: #28a745; font-weight: bold; font-size: 0.9rem; margin: 0.25rem 0; }
     .value::before { content: "💎 "; }
+    
+    /* Lazy loading styles */
+    .lazy-img {
+      opacity: 0;
+      background: #f0f0f0;
+      min-height: 200px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .lazy-img.loaded {
+      opacity: 1;
+    }
+    
+    .lazy-img.loading::before {
+      content: "📀";
+      font-size: 2rem;
+      opacity: 0.3;
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.6; }
+    }
   </style>
 </head>
 <body>
@@ -78,6 +104,66 @@
     
     let allAlbums = [];
     let currentFormat = "vinyl";
+    let imageObserver = null;
+
+    // Initialize Intersection Observer for lazy loading
+    function initLazyLoading() {
+      // Disconnect existing observer if any
+      if (imageObserver) {
+        imageObserver.disconnect();
+      }
+
+      const imageObserverConfig = {
+        rootMargin: '50px 0px', // Start loading 50px before the image enters viewport
+        threshold: 0.01
+      };
+
+      imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(entry => {
+          if (entry.isIntersecting) {
+            const img = entry.target;
+            
+            // Only process if it hasn't been loaded yet
+            if (img.dataset.src && !img.classList.contains('loaded')) {
+              loadImage(img);
+              observer.unobserve(img); // Stop observing once loaded
+            }
+          }
+        });
+      }, imageObserverConfig);
+    }
+
+    function loadImage(img) {
+      // Add loading class for visual feedback
+      img.classList.add('loading');
+      
+      // Create a new image to preload
+      const imageLoader = new Image();
+      
+      imageLoader.onload = () => {
+        // Image loaded successfully
+        img.src = img.dataset.src;
+        img.classList.remove('loading');
+        img.classList.add('loaded');
+        
+        // Remove data-src since we no longer need it
+        delete img.dataset.src;
+      };
+      
+      imageLoader.onerror = () => {
+        // Handle broken images
+        img.classList.remove('loading');
+        img.classList.add('loaded');
+        img.alt = '❌ Image not found';
+        img.style.background = '#ffebee';
+        img.style.color = '#c62828';
+        img.style.fontSize = '0.8rem';
+        img.style.padding = '1rem';
+      };
+      
+      // Start loading the image
+      imageLoader.src = img.dataset.src;
+    }
 
     async function loadAllAlbums(format) {
       if (!format) {
@@ -142,24 +228,43 @@
     }
 
     function displayAlbums(albums) {
+      // Disconnect observer before clearing gallery
+      if (imageObserver) {
+        imageObserver.disconnect();
+      }
+
       if (albums.length === 0) {
         gallery.innerHTML = "<p>No albums match your filters.</p>";
         return;
       }
 
       gallery.innerHTML = "";
+      
       albums.forEach(({ id, title, artist, year, genre, label, image, value, format }) => {
         const filename = image || `${slug(title)}_${slug(artist)}-${format}.jpg`;
         const card = document.createElement("div");
         card.className = "album-card";
         card.onclick = () => window.location.href = `album.html?id=${id}&format=${format}`;
+        
         card.innerHTML = `
-          <img src="images/${format}/${filename}" alt="${title} by ${artist}" loading="lazy">
+          <img class="lazy-img" 
+               data-src="images/${format}/${filename}" 
+               alt="${title} by ${artist}">
           <p><strong>${title}</strong><br>${artist} (${year})</p>
           ${genre ? `<p style="font-size: 0.8rem; color: #666;">${genre}</p>` : ''}
           ${value ? `<div class="value">${value}</div>` : ''}
         `;
+        
         gallery.appendChild(card);
+      });
+
+      // Re-initialize observer for new images
+      initLazyLoading();
+      
+      // Start observing all lazy images
+      const lazyImages = gallery.querySelectorAll('.lazy-img[data-src]');
+      lazyImages.forEach(img => {
+        imageObserver.observe(img);
       });
     }
 
@@ -181,9 +286,17 @@
     searchInput.addEventListener("input", filterAndDisplayAlbums);
     clearButton.addEventListener("click", clearFilters);
 
-    // Load vinyl records on page load
+    // Initialize on page load
     document.addEventListener("DOMContentLoaded", () => {
+      initLazyLoading();
       loadAllAlbums("vinyl");
+    });
+
+    // Cleanup observer when page unloads
+    window.addEventListener('beforeunload', () => {
+      if (imageObserver) {
+        imageObserver.disconnect();
+      }
     });
   </script>
 </body>
