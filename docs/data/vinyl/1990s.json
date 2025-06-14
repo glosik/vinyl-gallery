@@ -6,7 +6,7 @@
     "year": "1991",
     "genre": "Grunge",
     "label": "DGC Records",
-    "value": 480
+    "value": 3
   },
   {
     "id": "ten-pearl-jam-1991",
@@ -16,70 +16,6 @@
     "genre": "Alternative Rock",
     "label": "Epic Records",
     "image": "custom-ten-cover.jpg",
-    "value": 460
-  },
-  {
-    "id": "dark-side-of-the-moon-pink-floyd-1990",
-    "title": "Dark Side of the Moon",
-    "artist": "Pink Floyd",
-    "year": "1990",
-    "value": 495,
-    "genre": "Progressive Rock"
-  },
-  {
-    "id": "ok-computer-radiohead-1997",
-    "title": "OK Computer",
-    "artist": "Radiohead",
-    "year": "1997",
-    "value": 470,
-    "genre": "Alternative Rock"
-  },
-  {
-    "id": "the-chronic-dr-dre-1992",
-    "title": "The Chronic",
-    "artist": "Dr. Dre",
-    "year": "1992",
-    "value": 420,
-    "genre": "Hip Hop"
-  },
-  {
-    "id": "illmatic-nas-1994",
-    "title": "Illmatic",
-    "artist": "Nas",
-    "year": "1994",
-    "value": 450,
-    "genre": "Hip Hop"
-  },
-  {
-    "id": "doggystyle-snoop-dogg-1993",
-    "title": "Doggystyle",
-    "artist": "Snoop Dogg",
-    "year": "1993",
-    "value": 380,
-    "genre": "Hip Hop"
-  },
-  {
-    "id": "ready-to-die-the-notorious-b-i-g-1994",
-    "title": "Ready to Die",
-    "artist": "The Notorious B.I.G.",
-    "year": "1994",
-    "value": 440,
-    "genre": "Hip Hop"
-  },
-  {
-    "id": "in-the-aeroplane-over-the-sea-neutral-milk-hotel-1998",
-    "title": "In the Aeroplane Over the Sea",
-    "artist": "Neutral Milk Hotel",
-    "year": "1998",
-    "value": 350,
-    "genre": "Indie Rock"
-  },
-  {
-    "id": "the-blueprint-jay-z-1999",
-    "title": "The Blueprint",
-    "artist": "Jay-Z",
-    "year": "1999",
-    "value": 410,
-    "genre": "Hip Hop"
+    "value": 5
   }
 ] 

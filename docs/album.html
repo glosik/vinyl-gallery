@@ -20,7 +20,7 @@
     .meta-label { font-weight: bold; color: #333; }
     .meta-value { color: #666; }
     .value { color: #28a745; font-weight: bold; font-size: 1.2rem; }
-    .value::before { content: "💎 "; }
+    .value::before { content: "= "; }
     .format-badge { display: inline-block; padding: 0.25rem 0.5rem; background: #28a745; color: white; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; }
     .loading { text-align: center; padding: 2rem; }
     .error { text-align: center; padding: 2rem; color: #dc3545; }
@@ -40,78 +40,84 @@
     const slug = str => str.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
     
     async function loadAlbumDetails() {
-      const urlParams = new URLSearchParams(window.location.search);
-      const albumId = urlParams.get('id');
-      const format = urlParams.get('format');
-      
-      if (!albumId || !format) {
-        document.getElementById('album-content').innerHTML = '<div class="error">Invalid album URL</div>';
-        return;
-      }
+  const urlParams = new URLSearchParams(window.location.search);
+  const albumId = urlParams.get('id');
+  const format = urlParams.get('format');
+  
+  if (!albumId || !format) {
+    document.getElementById('album-content').innerHTML = '<div class="error">Invalid album URL</div>';
+    return;
+  }
 
+  try {
+    const decades = ['1980s', '1990s', '2000s', '2010s'];
+    let album = null;
+    let foundDecade = null; // ✅ NEW: Track which decade we found the album in
+    
+    for (const decade of decades) {
       try {
-        // Try different decades - in a real app, you'd have a better way to find the right file
-        const decades = ['1980s', '1990s', '2000s', '2010s'];
-        let album = null;
-        
-        for (const decade of decades) {
-          try {
-            const res = await fetch(`data/${format}/${decade}.json`);
-            if (res.ok) {
-              const albums = await res.json();
-              album = albums.find(a => a.id === albumId);
-              if (album) break;
-            }
-          } catch (e) {
-            // Continue to next decade
+        const res = await fetch(`data/${format}/${decade}.json`);
+        if (res.ok) {
+          const albums = await res.json();
+          album = albums.find(a => a.id === albumId);
+          if (album) {
+            foundDecade = decade; // ✅ NEW: Remember the decade
+            break;
           }
         }
-
-        if (!album) {
-          document.getElementById('album-content').innerHTML = '<div class="error">Album not found</div>';
-          return;
-        }
-
-        const filename = album.image || `${slug(album.title)}_${slug(album.artist)}-${format}.jpg`;
-        
-        document.title = `${album.title} by ${album.artist} - Vinyl Collection`;
-        
-        document.getElementById('album-content').innerHTML = `
-          <div class="album-detail">
-            <div class="album-header">
-              <div class="album-cover">
-                <img src="images/${format}/${filename}" alt="${album.title} by ${album.artist}">
-              </div>
-              <div class="album-info">
-                <h1 class="album-title">${album.title}</h1>
-                <h2 class="album-artist">${album.artist}</h2>
-                <div class="album-meta">
-                  <span class="meta-label">Year:</span>
-                  <span class="meta-value">${album.year}</span>
-                  <span class="meta-label">Format:</span>
-                  <span class="meta-value"><span class="format-badge">${format}</span></span>
-                  ${album.genre ? `
-                    <span class="meta-label">Genre:</span>
-                    <span class="meta-value">${album.genre}</span>
-                  ` : ''}
-                  ${album.label ? `
-                    <span class="meta-label">Label:</span>
-                    <span class="meta-value">${album.label}</span>
-                  ` : ''}
-                  ${album.value ? `
-                    <span class="meta-label">Value:</span>
-                    <span class="meta-value"><span class="value">${album.value}</span></span>
-                  ` : ''}
-                </div>
-              </div>
-            </div>
-          </div>
-        `;
-      } catch (err) {
-        document.getElementById('album-content').innerHTML = '<div class="error">Failed to load album details</div>';
-        console.error(err);
+      } catch (e) {
+        // Continue to next decade
       }
     }
+
+    if (!album || !foundDecade) {
+      document.getElementById('album-content').innerHTML = '<div class="error">Album not found</div>';
+      return;
+    }
+
+    const filename = album.image || `${slug(album.title)}_${slug(album.artist)}-${format}.jpg`;
+    
+    // ✅ NEW: Use decade in image path
+    const imagePath = `images/${format}/${foundDecade}/${filename}`;
+    
+    document.title = `${album.title} by ${album.artist} - Vinyl Collection`;
+    
+    document.getElementById('album-content').innerHTML = `
+      <div class="album-detail">
+        <div class="album-header">
+          <div class="album-cover">
+            <img src="${imagePath}" alt="${album.title} by ${album.artist}">
+          </div>
+          <div class="album-info">
+            <h1 class="album-title">${album.title}</h1>
+            <h2 class="album-artist">${album.artist}</h2>
+            <div class="album-meta">
+              <span class="meta-label">Year:</span>
+              <span class="meta-value">${album.year}</span>
+              <span class="meta-label">Format:</span>
+              <span class="meta-value"><span class="format-badge">${format}</span></span>
+              ${album.genre ? `
+                <span class="meta-label">Genre:</span>
+                <span class="meta-value">${album.genre}</span>
+              ` : ''}
+              ${album.label ? `
+                <span class="meta-label">Label:</span>
+                <span class="meta-value">${album.label}</span>
+              ` : ''}
+              ${album.value ? `
+                <span class="meta-label">Value:</span>
+                <span class="meta-value"><span class="value">${album.value}</span></span>
+              ` : ''}
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  } catch (err) {
+    document.getElementById('album-content').innerHTML = '<div class="error">Failed to load album details</div>';
+    console.error(err);
+  }
+}
 
     document.addEventListener("DOMContentLoaded", loadAlbumDetails);
   </script>

@@ -21,7 +21,7 @@
     .album-card img { width: 100%; height: auto; display: block; border-bottom: 1px solid #eee; transition: opacity 0.3s ease; }
     .album-card p { margin: 0.5rem 0 0; font-size: 0.9rem; }
     .value { color: #28a745; font-weight: bold; font-size: 0.9rem; margin: 0.25rem 0; }
-    .value::before { content: "💎 "; }
+    .value::before { content: " "; }
     
     /* Lazy loading styles */
     .lazy-img {
@@ -52,7 +52,7 @@
 </head>
 <body>
   <header>
-    <h1>Vinyl Collection Viewer</h1>
+    <h1>Media Viewer</h1>
     <div class="filters">
       <div class="filter-group">
         <label for="format">Format:</label>
@@ -166,37 +166,37 @@
     }
 
     async function loadAllAlbums(format) {
-      if (!format) {
-        allAlbums = [];
-        return;
-      }
-      
-      gallery.innerHTML = "<p>Loading...</p>";
-      allAlbums = [];
+  if (!format) {
+    allAlbums = [];
+    return;
+  }
+  
+  gallery.innerHTML = "<p>Loading...</p>";
+  allAlbums = [];
 
+  try {
+    const decades = ['1980s', '1990s', '2000s', '2010s'];
+    
+    for (const decade of decades) {
       try {
-        // Load all decades for the format
-        const decades = ['1980s', '1990s', '2000s', '2010s'];
-        
-        for (const decade of decades) {
-          try {
-            const res = await fetch(`data/${format}/${decade}.json`);
-            if (res.ok) {
-              const albums = await res.json();
-              allAlbums.push(...albums.map(album => ({ ...album, format, decade })));
-            }
-          } catch (e) {
-            // Continue to next decade if file doesn't exist
-          }
+        const res = await fetch(`data/${format}/${decade}.json`);
+        if (res.ok) {
+          const albums = await res.json();
+          // ✅ IMPORTANT: Add decade to each album object
+          allAlbums.push(...albums.map(album => ({ ...album, format, decade })));
         }
-        
-        updateGenreFilter();
-        filterAndDisplayAlbums();
-      } catch (err) {
-        gallery.innerHTML = "<p>Failed to load albums.</p>";
-        console.error(err);
+      } catch (e) {
+        // Continue to next decade if file doesn't exist
       }
     }
+    
+    updateGenreFilter();
+    filterAndDisplayAlbums();
+  } catch (err) {
+    gallery.innerHTML = "<p>Failed to load albums.</p>";
+    console.error(err);
+  }
+}
 
     function updateGenreFilter() {
       const genres = [...new Set(allAlbums.map(album => album.genre).filter(Boolean))].sort();
@@ -228,45 +228,46 @@
     }
 
     function displayAlbums(albums) {
-      // Disconnect observer before clearing gallery
-      if (imageObserver) {
-        imageObserver.disconnect();
-      }
+  if (imageObserver) {
+    imageObserver.disconnect();
+  }
 
-      if (albums.length === 0) {
-        gallery.innerHTML = "<p>No albums match your filters.</p>";
-        return;
-      }
+  if (albums.length === 0) {
+    gallery.innerHTML = "<p>No albums match your filters.</p>";
+    return;
+  }
 
-      gallery.innerHTML = "";
-      
-      albums.forEach(({ id, title, artist, year, genre, label, image, value, format }) => {
-        const filename = image || `${slug(title)}_${slug(artist)}-${format}.jpg`;
-        const card = document.createElement("div");
-        card.className = "album-card";
-        card.onclick = () => window.location.href = `album.html?id=${id}&format=${format}`;
-        
-        card.innerHTML = `
-          <img class="lazy-img" 
-               data-src="images/${format}/${filename}" 
-               alt="${title} by ${artist}">
-          <p><strong>${title}</strong><br>${artist} (${year})</p>
-          ${genre ? `<p style="font-size: 0.8rem; color: #666;">${genre}</p>` : ''}
-          ${value ? `<div class="value">${value}</div>` : ''}
-        `;
-        
-        gallery.appendChild(card);
-      });
+  gallery.innerHTML = "";
+  
+  albums.forEach(({ id, title, artist, year, genre, label, image, value, format, decade }) => {
+    const filename = image || `${slug(title)}_${slug(artist)}-${format}.jpg`;
+    
+    // ✅ NEW: Include decade in image path
+    const imagePath = `images/${format}/${decade}/${filename}`;
+    
+    const card = document.createElement("div");
+    card.className = "album-card";
+    card.onclick = () => window.location.href = `album.html?id=${id}&format=${format}`;
+    
+    card.innerHTML = `
+      <img class="lazy-img" 
+           data-src="${imagePath}" 
+           alt="${title} by ${artist}">
+      <p><strong>${title}</strong><br>${artist} (${year})</p>
+      ${genre ? `<p style="font-size: 0.8rem; color: #666;">${genre}</p>` : ''}
+      ${value ? `<div class="value">${value}</div>` : ''}
+    `;
+    
+    gallery.appendChild(card);
+  });
 
-      // Re-initialize observer for new images
-      initLazyLoading();
-      
-      // Start observing all lazy images
-      const lazyImages = gallery.querySelectorAll('.lazy-img[data-src]');
-      lazyImages.forEach(img => {
-        imageObserver.observe(img);
-      });
-    }
+  initLazyLoading();
+  
+  const lazyImages = gallery.querySelectorAll('.lazy-img[data-src]');
+  lazyImages.forEach(img => {
+    imageObserver.observe(img);
+  });
+}
 
     function clearFilters() {
       genreSelect.value = "";

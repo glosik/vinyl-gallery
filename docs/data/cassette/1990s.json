@@ -1,53 +1,5 @@
 [
   {
-    "id": "dark-side-of-the-moon-pink-floyd-1990-cassette",
-    "title": "Dark Side of the Moon",
-    "artist": "Pink Floyd",
-    "year": "1990",
-    "value": 500,
-    "genre": "Progressive Rock"
-  },
-  {
-    "id": "nevermind-nirvana-1991-cassette",
-    "title": "Nevermind",
-    "artist": "Nirvana",
-    "year": "1991",
-    "value": 480,
-    "genre": "Grunge"
-  },
-  {
-    "id": "ten-pearl-jam-1991-cassette",
-    "title": "Ten",
-    "artist": "Pearl Jam",
-    "year": "1991",
-    "value": 460,
-    "genre": "Alternative Rock"
-  },
-  {
-    "id": "blood-sugar-sex-magik-red-hot-chili-peppers-1991-cassette",
-    "title": "Blood Sugar Sex Magik",
-    "artist": "Red Hot Chili Peppers",
-    "year": "1991",
-    "value": 390,
-    "genre": "Alternative Rock"
-  },
-  {
-    "id": "dirt-alice-in-chains-1992-cassette",
-    "title": "Dirt",
-    "artist": "Alice in Chains",
-    "year": "1992",
-    "value": 440,
-    "genre": "Grunge"
-  },
-  {
-    "id": "vs-pearl-jam-1993-cassette",
-    "title": "Vs.",
-    "artist": "Pearl Jam",
-    "year": "1993",
-    "value": 420,
-    "genre": "Alternative Rock"
-  },
-  {
     "id": "siamese-dream-smashing-pumpkins-1993-cassette",
     "title": "Siamese Dream",
     "artist": "The Smashing Pumpkins",
@@ -62,21 +14,5 @@
     "year": "1994",
     "value": 430,
     "genre": "Grunge"
-  },
-  {
-    "id": "the-downward-spiral-nine-inch-nails-1994-cassette",
-    "title": "The Downward Spiral",
-    "artist": "Nine Inch Nails",
-    "year": "1994",
-    "value": 410,
-    "genre": "Industrial Rock"
-  },
-  {
-    "id": "dookie-green-day-1994-cassette",
-    "title": "Dookie",
-    "artist": "Green Day",
-    "year": "1994",
-    "value": 350,
-    "genre": "Punk Rock"
   }
 ] 
