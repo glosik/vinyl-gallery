@@ -1,0 +1,23 @@
+{
+  "name": "vinyl-gallery",
+  "version": "1.0.0",
+  "description": "A static vinyl collection gallery with lazy-loaded modular JSON",
+  "main": "index.js",
+  "scripts": {
+    "dev": "live-server docs --port=3000 --open=/",
+    "build": "node build.js",
+    "copy-assets": "cp -r src/* docs/",
+    "clean": "rm -rf docs && mkdir docs",
+    "deploy": "npm run build",
+    "deploy-manual": "./deploy.sh",
+    "start": "npm run dev",
+    "watch": "npm run build && npm run dev"
+  },
+  "homepage": "https://glosik.github.io/vinyl-gallery",
+  "keywords": ["vinyl", "gallery", "static", "github-pages"],
+  "author": "Your Name",
+  "license": "MIT",
+  "devDependencies": {
+    "live-server": "^1.2.2"
+  }
+} 

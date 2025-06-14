@@ -1,0 +1,11 @@
+{
+  "liveServer.settings.root": "/docs",
+  "liveServer.settings.port": 3000,
+  "files.exclude": {
+    "node_modules": true,
+    ".DS_Store": true
+  },
+  "emmet.includeLanguages": {
+    "javascript": "html"
+  }
+} 
