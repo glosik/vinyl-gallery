@@ -75,7 +75,7 @@
       return;
     }
 
-    const filename = album.image || `${slug(album.title)}_${slug(album.artist)}-${format}.jpg`;
+    const filename = album.image || `${slug(album.title)}_${slug(album.artist)}-${format}.webp`;
     
     // ✅ NEW: Use decade in image path
     const imagePath = `images/${format}/${foundDecade}/${filename}`;

@@ -240,7 +240,7 @@
   gallery.innerHTML = "";
   
   albums.forEach(({ id, title, artist, year, genre, label, image, value, format, decade }) => {
-    const filename = image || `${slug(title)}_${slug(artist)}-${format}.jpg`;
+    const filename = image || `${slug(title)}_${slug(artist)}-${format}.webp`;
     
     // ✅ NEW: Include decade in image path
     const imagePath = `images/${format}/${decade}/${filename}`;

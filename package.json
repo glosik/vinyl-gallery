@@ -5,19 +5,17 @@
   "main": "index.js",
   "scripts": {
     "dev": "live-server docs --port=3000 --open=/",
-    "build": "node build.js",
-    "copy-assets": "cp -r src/* docs/",
-    "clean": "rm -rf docs && mkdir docs",
-    "deploy": "npm run build",
-    "deploy-manual": "./deploy.sh",
     "start": "npm run dev",
-    "watch": "npm run build && npm run dev"
+    "convert-webp": "node convert-to-webp.js",
+    "optimize-images": "npm run convert-webp",
+    "deploy-manual": "./deploy.sh"
   },
   "homepage": "https://glosik.github.io/vinyl-gallery",
-  "keywords": ["vinyl", "gallery", "static", "github-pages"],
+  "keywords": ["vinyl", "gallery", "static", "github-pages", "webp"],
   "author": "Your Name",
   "license": "MIT",
   "devDependencies": {
-    "live-server": "^1.2.2"
+    "live-server": "^1.2.2",
+    "sharp": "^0.33.0"
   }
-} 
+}
