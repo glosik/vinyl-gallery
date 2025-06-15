@@ -1,13 +1,5 @@
 [
   {
-    "id": "abbey-road-the-beatles-1980-cassette",
-    "title": "Abbey Road",
-    "artist": "The Beatles",
-    "year": "1980",
-    "value": 500,
-    "genre": "Rock"
-  },
-  {
     "id": "led-zeppelin-iv-led-zeppelin-1980-cassette",
     "title": "Led Zeppelin IV",
     "artist": "Led Zeppelin",

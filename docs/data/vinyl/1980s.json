@@ -1,18 +1,18 @@
 [
   {
-    "id": "like-a-virgin-madonna-1984",
-    "title": "Like a Virgin",
-    "artist": "Madonna",
-    "year": "1984",
-    "value": 320,
-    "genre": "Pop"
+    "id": "right-or-wrong-george-strait-1983",
+    "title": "Right Or Wrong",
+    "artist": "George Strait",
+    "year": "1983",
+    "value": 10,
+    "genre": "Country"
   },
   {
-    "id": "thriller-michael-jackson-1982",
-    "title": "Thriller",
-    "artist": "Michael Jackson",
-    "year": "1982",
-    "value": 450,
-    "genre": "Pop"
+    "id": "greatest-hits-then-now-don-mclean-1987",
+    "title": "Greatest Hits - Then & Now",
+    "artist": "Don McLean",
+    "year": "1987",
+    "value": 10,
+    "genre": "Rock"
   }
 ]

@@ -72,13 +72,9 @@
       </div>
       
       <div class="filter-group">
-        <label for="value">Min Value:</label>
+        <label for="value">Value:</label>
         <select id="value">
-          <option value="">Any Value</option>
-          <option value="450">450+ Value</option>
-          <option value="400">400+ Value</option>
-          <option value="350">350+ Value</option>
-          <option value="300">300+ Value</option>
+          <option value="">All Values</option>
         </select>
       </div>
       
@@ -191,6 +187,7 @@
     }
     
     updateGenreFilter();
+    updateValueFilter();
     filterAndDisplayAlbums();
   } catch (err) {
     gallery.innerHTML = "<p>Failed to load albums.</p>";
@@ -209,14 +206,25 @@
       });
     }
 
+    function updateValueFilter() {
+      const values = [...new Set(allAlbums.map(album => album.value).filter(Boolean))].sort((a, b) => b - a);
+      valueSelect.innerHTML = '<option value="">All Values</option>';
+      values.forEach(value => {
+        const option = document.createElement('option');
+        option.value = value;
+        option.textContent = value;
+        valueSelect.appendChild(option);
+      });
+    }
+
     function filterAndDisplayAlbums() {
       const genreFilter = genreSelect.value;
-      const valueFilter = parseFloat(valueSelect.value) || 0;
+      const valueFilter = valueSelect.value; // ✅ CHANGED: Remove parseFloat and || 0
       const searchFilter = searchInput.value.toLowerCase();
 
       let filteredAlbums = allAlbums.filter(album => {
         const matchesGenre = !genreFilter || album.genre === genreFilter;
-        const matchesValue = !valueFilter || (album.value && album.value >= valueFilter);
+        const matchesValue = !valueFilter || album.value?.toString() === valueFilter; // ✅ CHANGED: Exact match
         const matchesSearch = !searchFilter || 
           album.title.toLowerCase().includes(searchFilter) || 
           album.artist.toLowerCase().includes(searchFilter);

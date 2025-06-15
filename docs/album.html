@@ -6,13 +6,16 @@
   <title>Album Details - Vinyl Collection</title>
   <style>
     body { font-family: sans-serif; margin: 0; padding: 1rem; background: #f9f9f9; }
-    .container { max-width: 800px; margin: 0 auto; }
+    .container { max-width: 1000px; margin: 0 auto; }
     .back-btn { display: inline-block; padding: 0.5rem 1rem; background: #007bff; color: white; text-decoration: none; border-radius: 4px; margin-bottom: 1rem; }
     .back-btn:hover { background: #0056b3; }
     .album-detail { background: white; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); overflow: hidden; }
+    
+    /* Main album header */
     .album-header { display: flex; gap: 2rem; padding: 2rem; }
     .album-cover { flex-shrink: 0; }
-    .album-cover img { width: 300px; height: 300px; object-fit: cover; border-radius: 8px; }
+    .main-cover { width: 300px; height: 300px; object-fit: cover; border-radius: 8px; cursor: pointer; transition: transform 0.2s; }
+    .main-cover:hover { transform: scale(1.02); }
     .album-info { flex: 1; }
     .album-title { font-size: 2rem; font-weight: bold; margin: 0 0 0.5rem; }
     .album-artist { font-size: 1.5rem; color: #666; margin: 0 0 1rem; }
@@ -20,13 +23,92 @@
     .meta-label { font-weight: bold; color: #333; }
     .meta-value { color: #666; }
     .value { color: #28a745; font-weight: bold; font-size: 1.2rem; }
-    .value::before { content: "= "; }
+    .value::before { content: "💎 "; }
     .format-badge { display: inline-block; padding: 0.25rem 0.5rem; background: #28a745; color: white; border-radius: 4px; font-size: 0.8rem; text-transform: uppercase; }
+    
+    /* Image gallery section */
+    .image-gallery { padding: 0 2rem 2rem; }
+    .gallery-title { font-size: 1.2rem; font-weight: bold; margin-bottom: 1rem; color: #333; }
+    .gallery-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+    .gallery-item { text-align: center; }
+    .gallery-item img { 
+      width: 100%; 
+      height: 200px; 
+      object-fit: cover; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      transition: transform 0.2s, box-shadow 0.2s;
+      border: 2px solid transparent;
+    }
+    .gallery-item img:hover { 
+      transform: translateY(-2px); 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15); 
+    }
+    .gallery-item img.active {
+      border-color: #007bff;
+      box-shadow: 0 0 0 2px rgba(0,123,255,0.25);
+    }
+    .gallery-item-label { 
+      margin-top: 0.5rem; 
+      font-size: 0.9rem; 
+      font-weight: 500; 
+      color: #555; 
+      text-transform: capitalize;
+    }
+    .image-missing { 
+      background: #f8f9fa; 
+      border: 2px dashed #dee2e6; 
+      display: flex; 
+      align-items: center; 
+      justify-content: center; 
+      color: #6c757d; 
+      font-size: 0.8rem;
+    }
+    
+    /* Lightbox */
+    .lightbox { 
+      position: fixed; 
+      top: 0; 
+      left: 0; 
+      width: 100%; 
+      height: 100%; 
+      background: rgba(0,0,0,0.9); 
+      display: none; 
+      justify-content: center; 
+      align-items: center; 
+      z-index: 1000;
+      cursor: pointer;
+    }
+    .lightbox img { 
+      max-width: 90%; 
+      max-height: 90%; 
+      object-fit: contain; 
+      border-radius: 8px;
+    }
+    .lightbox-close { 
+      position: absolute; 
+      top: 20px; 
+      right: 30px; 
+      color: white; 
+      font-size: 2rem; 
+      cursor: pointer;
+      background: rgba(0,0,0,0.5);
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
     .loading { text-align: center; padding: 2rem; }
     .error { text-align: center; padding: 2rem; color: #dc3545; }
+    
     @media (max-width: 600px) {
       .album-header { flex-direction: column; text-align: center; }
-      .album-cover img { width: 250px; height: 250px; }
+      .main-cover { width: 250px; height: 250px; }
+      .gallery-grid { grid-template-columns: repeat(2, 1fr); }
+      .image-gallery { padding: 0 1rem 1rem; }
     }
   </style>
 </head>
@@ -36,90 +118,222 @@
     <div id="album-content" class="loading">Loading album details...</div>
   </div>
 
+  <!-- Lightbox -->
+  <div id="lightbox" class="lightbox">
+    <div class="lightbox-close" onclick="closeLightbox()">&times;</div>
+    <img id="lightbox-img" src="" alt="">
+  </div>
+
   <script>
     const slug = str => str.toLowerCase().replace(/[^a-z0-9]/g, "-").replace(/-+/g, "-");
     
-    async function loadAlbumDetails() {
-  const urlParams = new URLSearchParams(window.location.search);
-  const albumId = urlParams.get('id');
-  const format = urlParams.get('format');
-  
-  if (!albumId || !format) {
-    document.getElementById('album-content').innerHTML = '<div class="error">Invalid album URL</div>';
-    return;
-  }
-
-  try {
-    const decades = ['1980s', '1990s', '2000s', '2010s'];
-    let album = null;
-    let foundDecade = null; // ✅ NEW: Track which decade we found the album in
+    // Image types and their labels
+    const imageTypes = {
+      'cover': 'Album Cover',
+      'back': 'Back Cover', 
+      'sideA': 'Side A',
+      'sideB': 'Side B'
+    };
     
-    for (const decade of decades) {
-      try {
-        const res = await fetch(`data/${format}/${decade}.json`);
-        if (res.ok) {
-          const albums = await res.json();
-          album = albums.find(a => a.id === albumId);
-          if (album) {
-            foundDecade = decade; // ✅ NEW: Remember the decade
-            break;
-          }
-        }
-      } catch (e) {
-        // Continue to next decade
+    // Generate image filename for each type
+    function getImageFilename(album, format, imageType, foundDecade) {
+      const baseFilename = album.image || `${slug(album.title)}_${slug(album.artist)}-${format}`;
+      
+      if (imageType === 'cover') {
+        return `images/${format}/${foundDecade}/${baseFilename}.webp`;
+      } else {
+        return `images/${format}/${foundDecade}/${baseFilename}-${imageType}.webp`;
       }
     }
-
-    if (!album || !foundDecade) {
-      document.getElementById('album-content').innerHTML = '<div class="error">Album not found</div>';
-      return;
+    
+    // Check if image exists
+    async function imageExists(url) {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        return response.ok;
+      } catch {
+        return false;
+      }
     }
+    
+    // Create gallery item
+    function createGalleryItem(imagePath, imageType, isMain = false) {
+      const item = document.createElement('div');
+      item.className = 'gallery-item';
+      
+      item.innerHTML = `
+        <img src="${imagePath}" 
+             alt="${imageTypes[imageType]}" 
+             onclick="openLightbox('${imagePath}')"
+             onerror="this.parentElement.innerHTML='<div class=\\'gallery-item\\'>< div class=\\'image-missing\\' style=\\'height:200px\\'>No ${imageTypes[imageType]} Image</div><div class=\\'gallery-item-label\\'>${imageTypes[imageType]}</div></div>'"
+             ${isMain ? 'class="active"' : ''}>
+        <div class="gallery-item-label">${imageTypes[imageType]}</div>
+      `;
+      
+      return item;
+    }
+    
+    // Switch main image
+    function switchMainImage(newSrc, clickedImg) {
+      const mainImg = document.querySelector('.main-cover');
+      if (mainImg) {
+        mainImg.src = newSrc;
+        
+        // Update active state
+        document.querySelectorAll('.gallery-item img').forEach(img => {
+          img.classList.remove('active');
+        });
+        if (clickedImg) {
+          clickedImg.classList.add('active');
+        }
+      }
+    }
+    
+    // Lightbox functions
+    function openLightbox(imageSrc) {
+      const lightbox = document.getElementById('lightbox');
+      const lightboxImg = document.getElementById('lightbox-img');
+      lightboxImg.src = imageSrc;
+      lightbox.style.display = 'flex';
+      document.body.style.overflow = 'hidden';
+    }
+    
+    function closeLightbox() {
+      const lightbox = document.getElementById('lightbox');
+      lightbox.style.display = 'none';
+      document.body.style.overflow = 'auto';
+    }
+    
+    // Close lightbox on background click
+    document.getElementById('lightbox').addEventListener('click', function(e) {
+      if (e.target === this) {
+        closeLightbox();
+      }
+    });
+    
+    // Close lightbox on Escape key
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape') {
+        closeLightbox();
+      }
+    });
+    
+    async function loadAlbumDetails() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const albumId = urlParams.get('id');
+      const format = urlParams.get('format');
+      
+      if (!albumId || !format) {
+        document.getElementById('album-content').innerHTML = '<div class="error">Invalid album URL</div>';
+        return;
+      }
 
-    const filename = album.image || `${slug(album.title)}_${slug(album.artist)}-${format}.webp`;
-    
-    // ✅ NEW: Use decade in image path
-    const imagePath = `images/${format}/${foundDecade}/${filename}`;
-    
-    document.title = `${album.title} by ${album.artist} - Vinyl Collection`;
-    
-    document.getElementById('album-content').innerHTML = `
-      <div class="album-detail">
-        <div class="album-header">
-          <div class="album-cover">
-            <img src="${imagePath}" alt="${album.title} by ${album.artist}">
-          </div>
-          <div class="album-info">
-            <h1 class="album-title">${album.title}</h1>
-            <h2 class="album-artist">${album.artist}</h2>
-            <div class="album-meta">
-              <span class="meta-label">Year:</span>
-              <span class="meta-value">${album.year}</span>
-              <span class="meta-label">Format:</span>
-              <span class="meta-value"><span class="format-badge">${format}</span></span>
-              ${album.genre ? `
-                <span class="meta-label">Genre:</span>
-                <span class="meta-value">${album.genre}</span>
-              ` : ''}
-              ${album.label ? `
-                <span class="meta-label">Label:</span>
-                <span class="meta-value">${album.label}</span>
-              ` : ''}
-              ${album.value ? `
-                <span class="meta-label">Value:</span>
-                <span class="meta-value"><span class="value">${album.value}</span></span>
-              ` : ''}
+      try {
+        const decades = ['1980s', '1990s', '2000s', '2010s'];
+        let album = null;
+        let foundDecade = null;
+        
+        for (const decade of decades) {
+          try {
+            const res = await fetch(`data/${format}/${decade}.json`);
+            if (res.ok) {
+              const albums = await res.json();
+              album = albums.find(a => a.id === albumId);
+              if (album) {
+                foundDecade = decade;
+                break;
+              }
+            }
+          } catch (e) {
+            // Continue to next decade
+          }
+        }
+
+        if (!album || !foundDecade) {
+          document.getElementById('album-content').innerHTML = '<div class="error">Album not found</div>';
+          return;
+        }
+
+        // Get main cover image path
+        const mainImagePath = getImageFilename(album, format, 'cover', foundDecade);
+        
+        document.title = `${album.title} by ${album.artist} - Vinyl Collection`;
+        
+        // Build the album detail HTML
+        let galleryHTML = '';
+        const availableImages = [];
+        
+        // Check which images exist and build gallery
+        for (const [imageType, label] of Object.entries(imageTypes)) {
+          const imagePath = getImageFilename(album, format, imageType, foundDecade);
+          const exists = await imageExists(imagePath);
+          
+          if (exists) {
+            availableImages.push({ type: imageType, path: imagePath, label });
+            const isMain = imageType === 'cover';
+            galleryHTML += createGalleryItem(imagePath, imageType, isMain).outerHTML;
+          }
+        }
+        
+        document.getElementById('album-content').innerHTML = `
+          <div class="album-detail">
+            <div class="album-header">
+              <div class="album-cover">
+                <img class="main-cover" 
+                     src="${mainImagePath}" 
+                     alt="${album.title} by ${album.artist}"
+                     onclick="openLightbox('${mainImagePath}')">
+              </div>
+              <div class="album-info">
+                <h1 class="album-title">${album.title}</h1>
+                <h2 class="album-artist">${album.artist}</h2>
+                <div class="album-meta">
+                  <span class="meta-label">Year:</span>
+                  <span class="meta-value">${album.year}</span>
+                  <span class="meta-label">Format:</span>
+                  <span class="meta-value"><span class="format-badge">${format}</span></span>
+                  ${album.genre ? `
+                    <span class="meta-label">Genre:</span>
+                    <span class="meta-value">${album.genre}</span>
+                  ` : ''}
+                  ${album.label ? `
+                    <span class="meta-label">Label:</span>
+                    <span class="meta-value">${album.label}</span>
+                  ` : ''}
+                  ${album.value ? `
+                    <span class="meta-label">Value:</span>
+                    <span class="meta-value"><span class="value">${album.value}</span></span>
+                  ` : ''}
+                </div>
+              </div>
             </div>
+            
+            ${availableImages.length > 1 ? `
+              <div class="image-gallery">
+                <div class="gallery-title">📸 Album Images</div>
+                <div class="gallery-grid">
+                  ${galleryHTML}
+                </div>
+              </div>
+            ` : ''}
           </div>
-        </div>
-      </div>
-    `;
-  } catch (err) {
-    document.getElementById('album-content').innerHTML = '<div class="error">Failed to load album details</div>';
-    console.error(err);
-  }
-}
+        `;
+        
+        // Add click handlers to gallery images for switching main image
+        document.querySelectorAll('.gallery-item img').forEach(img => {
+          img.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent lightbox from opening
+            switchMainImage(img.src, img);
+          });
+        });
+        
+      } catch (err) {
+        document.getElementById('album-content').innerHTML = '<div class="error">Failed to load album details</div>';
+        console.error(err);
+      }
+    }
 
     document.addEventListener("DOMContentLoaded", loadAlbumDetails);
   </script>
 </body>
-</html> 
+</html>
